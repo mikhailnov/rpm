@@ -71,7 +71,10 @@ foreach $module (sort keys %require) {
     # operators. Also I will need to change the processing of the
     # $RPM_* variable when I upgrade.
 
-    print "perl($module) = $require{$module}\n";
+    my $v = qx{ rpm --eval '%perl_convert_version $require{$module}' };
+    my $vv = $v; chomp($vv);
+    $vv or $v = $require{$module}; # fix "Invalid version format (alpha without decimal) at -e line 7." for perl-Software-License
+    print "perl($module) = $v\n";
   }
 }
 
