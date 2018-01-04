@@ -299,6 +299,10 @@ static rpmRC handleOneTrigger(rpmts ts, rpmte te, rpmsenseFlags sense,
  	if (!rstreq(rpmdsN(trigger), sourceName))
 	    continue;
 
+	/* HACK: Skip all triggers that start with a file path, as they're invalid */
+	if (*rpmdsN(trigger) == '/')
+	    continue;
+
 	/* XXX Trigger on any provided dependency, not just the package NEVR */
 	if (!rpmdsAnyMatchesDep(sourceH, trigger, 1))
 	    continue;
