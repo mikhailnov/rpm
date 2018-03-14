@@ -859,6 +859,7 @@ static VFA_t const virtualAttrs[] = {
     { "%pubkey",	RPMFILE_PUBKEY },
     { "%missingok",	RPMFILE_MISSINGOK },
     { "%artifact",	RPMFILE_ARTIFACT },
+    { "%optional",	RPMFILE_OPTIONAL },
     { NULL, 0 }
 };
 
@@ -1417,7 +1418,7 @@ static rpmRC addFile(FileList fl, const char * diskPath,
 	    int ignore = 0;
 	    const char *msg = fl->cur.isDir ? _("Directory not found: %s\n") :
 					      _("File not found: %s\n");
-	    if (fl->cur.attrFlags & RPMFILE_EXCLUDE)
+	    if (fl->cur.attrFlags & RPMFILE_EXCLUDE || fl->cur.attrFlags & RPMFILE_OPTIONAL)
 		ignore = 1;
 	    if (fl->cur.attrFlags & RPMFILE_DOC) {
 		int strict_doc =
@@ -2426,6 +2427,8 @@ static void processSpecialDir(rpmSpec spec, Package pkg, FileList fl,
 		free(newfile);
 	    }
 	    argvFree(globFiles);
+	} else if (fl->cur.attrFlags & RPMFILE_OPTIONAL) {
+	    rpmlog(RPMLOG_WARNING, _("Optional file not found by glob: %s\n"), eorigfile);
 	} else {
 	    rpmlog(RPMLOG_ERR, _("File not found by glob: %s\n"), eorigfile);
 	    fl->processingFailed = 1;
