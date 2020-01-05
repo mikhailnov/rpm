@@ -209,7 +209,10 @@ s:%lang(C) ::
 /^$/d' >> $MO_NAME
 fi
 
-KF5_HTML=`kf5-config --expandvars --install html 2>/dev/null`
+if command -v kf5-config > /dev/null 2>&1
+	then KF5_HTML="$(kf5-config --expandvars --install html 2>/dev/null)"
+	else KF5_HTML="/usr/share/doc5/HTML/"
+fi
 if [ x"$KF5_HTML" != x ] && [ -d "$TOP_DIR$KF5_HTML" ]; then
 find "$TOP_DIR$KF5_HTML" -type d|sed '
 s:'"$TOP_DIR"'::
