@@ -1118,6 +1118,14 @@ package or when debugging this package.\
   install
 
 #------------------------------------------------------------------------------
+# Install files with additional macros in a standardized form
+# arg1 is the name of the macro, arg2 is path to file with macros
+# Example: %%install_macro meson %%{SOURCE9}
+%install_macro() \
+%{__install} -D --mode=644 %2 %{buildroot}%{_rpmmacrodir}/macros.%1 \
+%{nil}
+
+#------------------------------------------------------------------------------
 %patches %{lua: for i, p in ipairs(patches) do print(p.." ") end}
 %sources %{lua: for i, s in ipairs(sources) do print(s.." ") end}
 
