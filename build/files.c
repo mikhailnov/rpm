@@ -2825,6 +2825,44 @@ exit:
     return rc;
 }
 
+/**
+ * Execute additional buildroot verification script
+ * @param buildRoot	path of build root
+ * @return		-1 if skipped, 0 on OK, 1 on error
+ */
+static int checkBuildroot(const char *buildRoot)
+{
+    static char * const av_ckbuildroot[] = { "%{?__check_buildroot}", NULL };
+    StringBuf sb_stdout = NULL;
+    int rc = -1;
+    char * s = rpmExpand(av_ckbuildroot[0], NULL);
+    if (!(s && *s))
+	goto exit;
+    rpmlog(RPMLOG_NOTICE, _("Executing additional buildroot verification script: %s\n"), s);
+    rc = rpmfcExec(av_ckbuildroot, NULL, &sb_stdout, 0, buildRoot);
+    if (rc < 0)
+	goto exit;
+
+    if (sb_stdout) {
+	/* If to pass failnonzero=1 to rpmfcExec(),
+	 * stdout is not printed on error and is printed on success.
+	 * So let's assume that it is a failure if there is any stdout. */
+	rc = 1;
+	const char * t = getStringBuf(sb_stdout);
+	if ((*t != '\0') && (*t != '\n')) {
+	    rpmlog(RPMLOG_WARNING,
+		_("Warnings from additional buildroot verification script:\n%s"), t);
+	} else {
+	    rc = 0;
+	}
+    }
+
+exit:
+    freeStringBuf(sb_stdout);
+    free(s);
+    return rc;
+}
+
 static rpmTag copyTagsFromMainDebug[] = {
     RPMTAG_ARCH,
     RPMTAG_SUMMARY,
@@ -3221,6 +3259,10 @@ rpmRC processBinaryFiles(rpmSpec spec, rpmBuildPkgFlags pkgFlags,
     
     
     if (checkFiles(spec->buildRoot, check_fileList) > 0) {
+	res = RPMRC_FAIL;
+    }
+
+    if (checkBuildroot(spec->buildRoot) > 0) {
 	res = RPMRC_FAIL;
     }
 
