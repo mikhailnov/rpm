@@ -387,6 +387,7 @@ if test "$with_crypto" = libgcrypt ; then
        AC_MSG_ERROR([libgcrypt not found])
     fi
   fi
+  AC_DEFINE(WITH_LIBGCRYPT, 1, [Build with libgcrypt?])
 fi
 
 AM_CONDITIONAL([WITH_LIBGCRYPT],[test "$with_crypto" = libgcrypt])

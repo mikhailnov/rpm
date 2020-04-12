@@ -28,6 +28,8 @@ static const char *hash_algo_name[] = {
     [PGPHASHALGO_SHA384]       = "sha384",
     [PGPHASHALGO_SHA512]       = "sha512",
     [PGPHASHALGO_SHA224]       = "sha224",
+    [PGPHASHALGO_GOST12_256]   = "streebog256",
+    [PGPHASHALGO_GOST12_512]   = "streebog512",
 };
 
 #define ARRAY_SIZE(a)  (sizeof(a) / sizeof(a[0]))
