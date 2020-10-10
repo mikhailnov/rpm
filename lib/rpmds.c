@@ -1,6 +1,9 @@
 /** \ingroup rpmdep
  * \file lib/rpmds.c
  */
+#include <stdio.h>
+#include <string.h>
+
 #include "system.h"
 
 #include <rpm/rpmtypes.h>
@@ -995,6 +998,17 @@ int rpmdsCompareIndex(rpmds A, int aix, rpmds B, int bix)
 	result = 1;
     } else {
 	/* Both AEVR and BEVR exist, compare [epoch:]version[-release]. */
+
+        /* HACK: Detect and disable DistEpoch */
+        char *aDistEpoch = strrchr(AEVR, ':');
+        char *bDistEpoch = strrchr(BEVR, ':');
+
+        if (aDistEpoch && (strstr(aDistEpoch, "-") == 0) && (strchr(AEVR, '-') != 0))
+            *aDistEpoch = '\0';
+        if (bDistEpoch && (strstr(bDistEpoch, "-") == 0) && (strchr(BEVR, '-') != 0))
+            *bDistEpoch = '\0';
+        /* End HACK */
+
 	rpmver av = rpmverParse(AEVR);
 	rpmver bv = rpmverParse(BEVR);
 
