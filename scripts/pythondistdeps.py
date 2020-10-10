@@ -299,7 +299,10 @@ if __name__ == "__main__":
                         if pymajor_name_ not in py_deps:
                             py_deps[pymajor_name_] = []
                 if args.legacy or args.legacy_provides:
-                    legacy_name = 'pythonegg({})({})'.format(pyver_major, dist.key)
+                    if pyver_major == '2':
+                        legacy_name = 'pythonegg({})'.format(dist.key)
+                    else:
+                        legacy_name = 'python{}egg({})'.format(pyver_major, dist.key)
                     if legacy_name not in py_deps:
                         py_deps[legacy_name] = []
                 if dist.version:
@@ -357,7 +360,10 @@ if __name__ == "__main__":
                         dep_normalized_name = dep.key
 
                     if args.legacy:
-                        name = 'pythonegg({})({})'.format(pyver_major, dep.key)
+                        if pyver_major == '2':
+                            name = 'pythonegg({})'.format(dep.key)
+                        else:
+                            name = 'python{}egg({})'.format(pyver_major, dep.key)
                     else:
                         if args.majorver_only:
                             name = 'python{}dist({})'.format(pyver_major, dep_normalized_name)
