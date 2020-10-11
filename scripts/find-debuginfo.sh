@@ -254,8 +254,9 @@ strip_to_debug()
   $strip_glibs && case "$(file -bi "$2")" in
     application/x-sharedlib*) g=-g ;;
   esac
-  eu-strip --remove-comment $r $g ${keep_remove_args} -f "$1" "$2" || exit
-  chmod 444 "$1" || exit
+  [ -n "$EXCLUDE_FULL_REGEXP" ] && grep -E -q "$EXCLUDE_FULL_REGEXP" <<< "$2" && g=-g
+  eu-strip --remove-comment $r $g ${keep_remove_args} $([ -n "$DISABLE_DEBUG" ] || echo -f "$1") "$2" || exit
+  [ -n "$DISABLE_DEBUG" ] || chmod 444 "$1" || exit
 }
 
 add_minidebug()
@@ -366,10 +367,20 @@ while read nlinks inum f; do
   echo "$nlinks $inum $f" >>"$temp/primary"
 done
 
+[[ -n "$EXCLUDE_FROM_STRIP" ]] && \
+EXCLUDE_REGEXP=`perl -e 'print "(", join("|", @ARGV), ")"' $EXCLUDE_FROM_STRIP`
+[[ -n "$EXCLUDE_FROM_FULL_STRIP" ]] && \
+EXCLUDE_FULL_REGEXP=`perl -e 'print "(", join("|", @ARGV), ")"' $EXCLUDE_FROM_FULL_STRIP`
+
+echo $EXCLUDE_REGEXP
 # Strip ELF binaries
 do_file()
 {
   local nlinks=$1 inum=$2 f=$3 id link linked
+
+  [[ -n "$EXCLUDE_REGEXP" ]] && grep -E -q "$EXCLUDE_REGEXP" <<< "$f" && \
+  return
+  [ -n "$DISABLE_DEBUG" ] && strip_to_debug "" "$f" && return
 
   get_debugfn "$f"
   [ -f "${debugfn}" ] && return
@@ -588,7 +599,7 @@ fi
 
 if [ -d "${RPM_BUILD_ROOT}/usr/lib" ] || [ -d "${RPM_BUILD_ROOT}/usr/src" ]; then
   ((nout > 0)) ||
-  test ! -d "${RPM_BUILD_ROOT}/usr/lib" ||
+  test ! -d "${RPM_BUILD_ROOT}/usr/lib/debug" ||
   (cd "${RPM_BUILD_ROOT}/usr/lib"; find debug -type d) |
   sed 's,^,%dir /usr/lib/,' >> "$LISTFILE"
 
