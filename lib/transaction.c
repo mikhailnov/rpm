@@ -409,6 +409,21 @@ static int handleColorConflict(rpmts ts,
     return rConflicts;
 }
 
+static int is_a_doc_conflict(const char *fn)
+{
+    const char *ignorelist[] = {
+       "/usr/share/man/",
+       "/usr/share/gtk-doc/html/",
+       "/usr/share/gnome/html/",
+       NULL
+    };
+    const char **dnp;
+    for (dnp = ignorelist; *dnp != NULL; dnp++)
+       if (strstr(fn, *dnp) == fn) return 1;
+
+    return 0;
+}
+
 /**
  * handleInstInstalledFiles.
  * @param ts		transaction set
@@ -467,9 +482,19 @@ static void handleInstInstalledFile(const rpmts ts, rpmte p, rpmfiles fi, int fx
 	if (rpmtsFilterFlags(ts) & RPMPROB_FILTER_REPLACEOLDFILES)
 	    rConflicts = 0;
 
+	char *fn;
+	if (rConflicts)
+	    fn = rpmfilesFN(fi, fx);
+	/* HACK: always install latest (arch-independent) man
+	   pages and gtk/gnome html doc files. */
+	if (rConflicts && is_a_doc_conflict(fn)) {
+	    rpmfsSetAction(fs, fx, FA_CREATE);
+	    rConflicts = 0;
+	    free(fn);
+	}
+
 	if (rConflicts) {
 	    char *altNEVR = headerGetAsString(otherHeader, RPMTAG_NEVRA);
-	    char *fn = rpmfilesFN(fi, fx);
 	    rpmteAddProblem(p, RPMPROB_FILE_CONFLICT, altNEVR, fn,
 			    headerGetInstance(otherHeader));
 	    free(fn);
@@ -633,8 +658,18 @@ assert(otherFi != NULL);
 		rConflicts = handleColorConflict(ts, fs, fi, i,
 						otherFs, otherFi, otherFileNum);
 
+		char *fn;
+		if (rConflicts)
+		    fn = rpmfilesFN(fi, i);
+		/* HACK: always install latest (arch-independent) man
+		   pages and gtk/gnome html doc files. */
+		if (rConflicts && is_a_doc_conflict(fn)) {
+		    rpmfsSetAction(fs, i, FA_CREATE);
+		    rConflicts = 0;
+		    free(fn);
+		}
+
 		if (rConflicts && reportConflicts) {
-		    char *fn = rpmfilesFN(fi, i);
 		    rpmteAddProblem(p, RPMPROB_NEW_FILE_CONFLICT,
 				    rpmteNEVRA(otherTe), fn, 0);
 		    free(fn);
