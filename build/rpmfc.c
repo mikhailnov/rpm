@@ -1208,12 +1208,16 @@ rpmRC rpmfcClassify(rpmfc fc, ARGV_t argv, rpm_mode_t * fmode)
     if (ms == NULL || mime == NULL) {
 	rpmlog(RPMLOG_ERR, _("magic_open(0x%x) failed: %s\n"),
 		msflags, strerror(errno));
+#if !defined(__e2k__)
 	#pragma omp cancel parallel
+#endif
     }
 
     if (magic_load(ms, NULL) == -1) {
 	rpmlog(RPMLOG_ERR, _("magic_load failed: %s\n"), magic_error(ms));
+#if !defined(__e2k__)
 	#pragma omp cancel parallel
+#endif
     }
     if (magic_load(mime, NULL) == -1) {
 	rpmlog(RPMLOG_ERR, _("magic_load failed: %s\n"), magic_error(mime));
