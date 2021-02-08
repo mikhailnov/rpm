@@ -959,6 +959,11 @@ static int is_geode(void)
 
 #if defined(__linux__) && (defined(__i386__) || defined(__x86_64__))
 static int is_ryzen() {
+    // Disable this crap by default on ROSA.
+    // rpmExpandNumeric does not work here for some reasons,
+    // probably this is done earlier than macros are loaded.
+    if (access("/etc/rpm/znver1_enable", F_OK) != 0)
+        return 0;
     uint32_t eax, ebx, ecx, edx;
     char vendor[13];
     int family;
